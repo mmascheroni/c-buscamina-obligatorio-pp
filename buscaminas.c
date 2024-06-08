@@ -60,6 +60,9 @@ void agregarMinasAleatoriamente(char tablero[FILAS][COLUMNAS], int filaEscogida,
 // Se calcula la cantidad de minas alrededor de una casilla
 int minasCercanasACasillero(int fila, int columna, char tablero[FILAS][COLUMNAS]);
 
+// Se marcan como exploradas las casillas que no tienen minas cercanas, se ejecuta para todas las casillas adyacentes
+void explorarCasillerosCerosAdyacentes(int fila, int columna, char tablero[FILAS][COLUMNAS]);
+
 // Actualiza el tablero verdadero colocando si una casilla fue explorada coloca ' ', si es inexplorada aun ?. Y devuelve un status de la jugada como int.
 int casillaEscogidaStatus(int fila, int columna, char tablero[FILAS][COLUMNAS], char movimiento);
 
@@ -88,9 +91,11 @@ int main() {
 
     // Se imprime el tablero por primera vez
     imprimirTablero(tablero, mostrarMinas);
+
+    printf("\n\nSu primer jugada corresponde a Explorar (E), se le pedira ingresar fila y columna para comenzar el juego:\n");
     
     // Primero se realiza el primer jugada, para luego colocar las Minas de forma aleatoria
-    char movimiento = solicitar_movimiento();
+    char movimiento = 'E';
     int fila_escogida = solicitar_fila();
     int columna_escogida = solicitar_columna();
     agregarMinasAleatoriamente(tablero, fila_escogida, columna_escogida);
@@ -105,7 +110,6 @@ int main() {
         int status = casillaEscogidaStatus(fila_escogida, columna_escogida, tablero, movimiento);
 
         imprimirTablero(tablero, mostrarMinas);
-
 
 
         if (verificaCasillerosLibres(tablero)) {
@@ -273,7 +277,7 @@ void imprimirFilasCompletasTablero(char tablero[FILAS][COLUMNAS], int mostrarMin
 
 
             // Si la letra actual es una mina y se mostrarMinas es 1, se perdio el juego y se muestra el tablero como se encuentra mas todas las bombas.
-            if (letraActual == MINA && mostrarMinas == 1) {
+            if ((letraActual == MINA || letraActual == CASILLA_MARCADA_MINA ) && mostrarMinas == 1) {
                 letra = MINA;
             }
 
@@ -323,11 +327,14 @@ void agregarMina(int fila, int columna, char tablero[FILAS][COLUMNAS]) {
 }
 
 void agregarMinasAleatoriamente(char tablero[FILAS][COLUMNAS], int filaEscogida, int columnaEscogida) {
+    filaEscogida--;
+    columnaEscogida--;
     int minas_colocadas = 0;
+    
     while (minas_colocadas < TOTAL_MINAS) {
         int fila = generarNumeroRandom(0, FILAS - 1);
         int columna = generarNumeroRandom(0, COLUMNAS - 1);
-        if ((fila != filaEscogida && columna != columnaEscogida) && tablero[fila][columna] != MINA) {
+        if ((fila != filaEscogida || columna != columnaEscogida) && tablero[fila][columna] != MINA) {
             agregarMina(fila, columna, tablero);
             minas_colocadas++;
         }
@@ -372,27 +379,68 @@ int minasCercanasACasillero(int fila, int columna, char tablero[FILAS][COLUMNAS]
     return cantidad;
 }
 
+void explorarCasillerosCerosAdyacentes(int fila, int columna, char tablero[FILAS][COLUMNAS]) {
+     // Se verifica que la casilla sea solamente inexplorada, sino se sale de la funcion
+    if ( tablero[fila][columna] != CASILLA_INEXPLORADA ) {
+        return;
+    }
+
+    int minasCercanas = minasCercanasACasillero(fila, columna, tablero);
+    
+    if ( minasCercanas == 0 ) {
+        // Marcamos la casilla como explorada
+        tablero[fila][columna] = CASILLA_EXPLORADA;
+        
+        // Exploramos casillas adyacentes y ademas verificamos si tienen o no filas o columnas antes y despues
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (i != 0 || j != 0) { 
+                    int nuevaFila = fila + i;
+                    int nuevaColumna = columna + j;
+                    if (nuevaFila >= 0 && nuevaFila < FILAS && nuevaColumna >= 0 && nuevaColumna < COLUMNAS) {
+                        explorarCasillerosCerosAdyacentes(nuevaFila, nuevaColumna, tablero);
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 int casillaEscogidaStatus(int fila, int columna, char tablero[FILAS][COLUMNAS], char movimiento) {
     fila--;
     columna--;
 
     // Verificamos el tipo de movimiento
-    if ( movimiento == 'E' || movimiento == 'I' ) {
+    if ( movimiento == 'E' ) {
         if (tablero[fila][columna] == MINA) {
             return MINA_ENCONTRADA;
         }
 
-        if (tablero[fila][columna] == CASILLA_EXPLORADA || tablero[fila][columna] == CASILLA_MARCADA_MINA) {
+        else if (tablero[fila][columna] == CASILLA_EXPLORADA || tablero[fila][columna] == CASILLA_MARCADA_MINA) {
             return CASILLA_EXPLORADA_ANTERIORMENTE;
         }
 
-        if ( tablero[fila][columna] == CASILLA_SOSPECHOSA ) {
+        else if ( tablero[fila][columna] == CASILLA_SOSPECHOSA ) {
             return CASILLA_MARCADA_ANTERIORMENTE;
+        }
+
+        else {
+            int minasCercanas = minasCercanasACasillero(fila, columna, tablero);
+
+            if (minasCercanas == 0) {
+                // Se exploran casillas adyacentes y ademas se marca el casillero como explorada en dicha funcion, y los casilleros adyacentes que tengan cero minas adyacentes tambbien se maracaran como marcada
+                explorarCasillerosCerosAdyacentes(fila, columna, tablero);
+            } else {
+                tablero[fila][columna] = CASILLA_EXPLORADA;
+            }
+
+            return CASILLA_EXPLORADA_CORRECTAMENTE;
         }
 
         tablero[fila][columna] = CASILLA_EXPLORADA;
         return CASILLA_EXPLORADA_CORRECTAMENTE;
+
     } 
 
     if ( movimiento == 'M' ) {
