@@ -104,18 +104,18 @@ int main() {
     
     // Primero se realiza el primer jugada, para luego colocar las Minas de forma aleatoria
     char movimiento = 'E';
-    int fila_escogida = solicitar_fila();
-    int columna_escogida = solicitar_columna();
-    agregarMinasAleatoriamente(tablero, fila_escogida, columna_escogida);
-    casillaEscogidaStatus(fila_escogida, columna_escogida, tablero, movimiento);
+    int filaEscogida = solicitar_fila();
+    int columnaEscogida = solicitar_columna();
+    agregarMinasAleatoriamente(tablero, filaEscogida, columnaEscogida);
+    casillaEscogidaStatus(filaEscogida, columnaEscogida, tablero, movimiento);
     imprimirTablero(tablero, mostrarMinas);
 
     do {
         movimiento = solicitar_movimiento();
-        fila_escogida = solicitar_fila();
-        columna_escogida = solicitar_columna();
+        filaEscogida = solicitar_fila();
+        columnaEscogida = solicitar_columna();
 
-        int status = casillaEscogidaStatus(fila_escogida, columna_escogida, tablero, movimiento);
+        int status = casillaEscogidaStatus(filaEscogida, columnaEscogida, tablero, movimiento);
 
         imprimirTablero(tablero, mostrarMinas);
 
@@ -196,38 +196,38 @@ void bienvenida_jugador() {
 ****************************************/
 
 char solicitar_movimiento() {
-    char movimiento_escogido;
+    char movimientoEscogido;
 
     do {
         printf("\nPor favor, escoga primero su movimiento, recuerde que debe ser E, M o B: ");
-        scanf(" %c", &movimiento_escogido);
+        scanf(" %c", &movimientoEscogido);
 
-        movimiento_escogido = toupper(movimiento_escogido);
-    } while (movimiento_escogido != 'E' && movimiento_escogido != 'M' && movimiento_escogido != 'B');
+        movimientoEscogido = toupper(movimientoEscogido);
+    } while (movimientoEscogido != 'E' && movimientoEscogido != 'M' && movimientoEscogido != 'B');
 
-    return movimiento_escogido;
+    return movimientoEscogido;
 }
 
 int solicitar_columna() {
-    int columna_escogida = 0;
+    int columnaEscogida = 0;
     
     do {
         printf("\nPor favor, escoga la columna, va de 1 a 8: ");
-        scanf(" %d", &columna_escogida);
-    } while ( columna_escogida < 1 || columna_escogida > 8 );
+        scanf(" %d", &columnaEscogida);
+    } while ( columnaEscogida < 1 || columnaEscogida > 8 );
 
-    return columna_escogida;
+    return columnaEscogida;
 }
 
 int solicitar_fila() {
-    int fila_escogida = 0;
+    int filaEscogida = 0;
 
     do {
         printf("\nPor favor, escoga la fila, va de 1 a 8: ");
-        scanf(" %d", &fila_escogida);
-    } while ( fila_escogida < 1 || fila_escogida > 8 );
+        scanf(" %d", &filaEscogida);
+    } while ( filaEscogida < 1 || filaEscogida > 8 );
 
-    return fila_escogida;
+    return filaEscogida;
 }
 
 
@@ -383,14 +383,14 @@ void agregarMina(int fila, int columna, char tablero[FILAS][COLUMNAS]) {
 void agregarMinasAleatoriamente(char tablero[FILAS][COLUMNAS], int filaEscogida, int columnaEscogida) {
     filaEscogida--;
     columnaEscogida--;
-    int minas_colocadas = 0;
+    int minasColocadas = 0;
     
-    while (minas_colocadas < TOTAL_MINAS) {
+    while (minasColocadas < TOTAL_MINAS) {
         int fila = generarNumeroRandom(0, FILAS - 1);
         int columna = generarNumeroRandom(0, COLUMNAS - 1);
         if ((fila != filaEscogida || columna != columnaEscogida) && tablero[fila][columna] != MINA) {
             agregarMina(fila, columna, tablero);
-            minas_colocadas++;
+            minasColocadas++;
         }
     }
 }
@@ -445,7 +445,7 @@ void explorarCasillerosCerosAdyacentes(int fila, int columna, char tablero[FILAS
         // Marcamos la casilla como explorada
         tablero[fila][columna] = CASILLA_EXPLORADA;
         
-        // Exploramos casillas adyacentes y ademas verificamos si tienen o no filas o columnas antes y despues
+        // Exploramos casillas adyacentes 
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 if (i != 0 || j != 0) { 
@@ -464,7 +464,7 @@ int buscarExplorarCasillerosAdyacentes(int fila, int columna, char tablero[FILAS
     int cantidadMarcadasComoSospechosa = 0;
     int cantidadDeMinasAdyacentes = minasCercanasACasillero(fila, columna, tablero);
     
-    // Exploramos casillas adyacentes y ademas verificamos si tienen o no filas o columnas antes y despues
+    // Exploramos casillas adyacentes 
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
             if (i != 0 || j != 0) { 
