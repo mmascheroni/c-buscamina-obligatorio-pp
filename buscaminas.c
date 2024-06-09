@@ -43,9 +43,6 @@ void imprimirFilasCompletasTablero(char tablero[FILAS][COLUMNAS], int mostrarMin
 // Imprime el tablero en consola, y segun las celdas muestra la info correcta, ya sea si la misma se encuentra Inexplorada, Explorada, Marcada o si es una Bomba.
 void imprimirTablero(char tablero[FILAS][COLUMNAS], int mostrarMinas);
 
-// Marcar una casilla como sospechosa, se muestra como X
-void marcarCasillaComoSospechosa(int fila, int columna, char tablero[FILAS][COLUMNAS]);
-
 // Se convierte un int a char
 char convertirEnteroACaracter(int entero);
 
@@ -92,7 +89,6 @@ int main() {
     // Se inicia el tabler con ?
     iniciarTablero(tablero);
 
-    // marcarCasillaComoSospechosa(1, 1, tablero);
     bienvenida_jugador();
 
     // Se imprime el tablero por primera vez
@@ -301,13 +297,6 @@ void imprimirFilasCompletasTablero(char tablero[FILAS][COLUMNAS], int mostrarMin
 char convertirEnteroACaracter(int entero) {
     return entero + '0';
 }
-
-void marcarCasillaComoSospechosa(int fila, int columna, char tablero[FILAS][COLUMNAS]) {
-    fila--;
-    columna--;
-    tablero[fila][columna] = CASILLA_SOSPECHOSA;
-}
-
 
 int verificaCasillerosLibres(char tablero[FILAS][COLUMNAS]) {
     int cantidadCasillerosExplorados = 0;
