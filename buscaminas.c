@@ -18,6 +18,8 @@
 #define CASILLA_MARCADA_CORRECTAMENTE 5
 #define CASILLA_MARCADA_ES_MINA 6
 #define CASILLEROS_MARCADOS_LLEGO_AL_LIMITE 7
+#define JUGADA_BUSCAR_EFECTUADA_CORRECTAMENTE 8
+#define JUGADA_BUSCAR_NO_SE_PUEDE_APLICAR 9
 
 // Bienvenida al jugador y reglas del juego.
 void bienvenida_jugador();
@@ -70,7 +72,11 @@ int verificaCasillerosLibres(char tablero[FILAS][COLUMNAS]);
 // Verifica la cantidad de casilleros marcados y que no supere la cantidad de los permitidos en este caso 16
 int verificaCasillerosMarcados(char tablero[FILAS][COLUMNAS]);
 
+// Verifica la cantidad de casillas marcadas adyacentes a un casillero
 int verificaSiElCasilleroSeEncuentraMarcado(int fila, int columna, char tablero[FILAS][COLUMNAS]);
+
+// Funcionalidad buscar -> En casilleros adyacentes al que se realiza la busqueda para ello dicha celda debe ser inexplorada y ademas debe coincidir el numero de minas adyacentes a esta celda con las casillas marcadas como sospechosas adyacentes, se verifica que si se encuentra una mina adyacente que no fue marcada se finaliza el juego
+int buscarExplorarCasillerosAdyacentes(int fila, int columna, char tablero[FILAS][COLUMNAS]);
 
 
 
@@ -142,6 +148,14 @@ int main() {
 
         else if (status == CASILLEROS_MARCADOS_LLEGO_AL_LIMITE) {
             printf("\n ----> CASILLEROS MARCADOS LLEGO AL LIMITE DE 16 <-----\n\n");
+        }
+
+        else if (status == JUGADA_BUSCAR_EFECTUADA_CORRECTAMENTE) {
+            printf("\n ----> JUGADA BUSCAR EFECTUADA CORRECTAMENTE <-----\n\n");
+        }
+
+        else if (status == JUGADA_BUSCAR_NO_SE_PUEDE_APLICAR) {
+            printf("\n ----> JUGADA BUSCAR NO SE PUEDE APLICAR <-----\n\n");
         }
 
         imprimirTablero(tablero, mostrarMinas);
@@ -446,6 +460,49 @@ void explorarCasillerosCerosAdyacentes(int fila, int columna, char tablero[FILAS
     }
 }
 
+int buscarExplorarCasillerosAdyacentes(int fila, int columna, char tablero[FILAS][COLUMNAS]) {
+    int cantidadMarcadasComoSospechosa = 0;
+    int cantidadDeMinasAdyacentes = minasCercanasACasillero(fila, columna, tablero);
+    
+    // Exploramos casillas adyacentes y ademas verificamos si tienen o no filas o columnas antes y despues
+    for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+            if (i != 0 || j != 0) { 
+                int nuevaFila = fila + i;
+                int nuevaColumna = columna + j;
+                if (nuevaFila >= 0 && nuevaFila < FILAS && nuevaColumna >= 0 && nuevaColumna < COLUMNAS) {
+                    if ( tablero[nuevaFila][nuevaColumna] == CASILLA_SOSPECHOSA || tablero[nuevaFila][nuevaColumna] == CASILLA_MARCADA_MINA ) {
+                        cantidadMarcadasComoSospechosa++;
+                    }
+                }
+            }
+        }
+    }
+
+    if ( cantidadMarcadasComoSospechosa == cantidadDeMinasAdyacentes ) {
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (i != 0 || j != 0) { 
+                    int nuevaFila = fila + i;
+                    int nuevaColumna = columna + j;
+                    if (nuevaFila >= 0 && nuevaFila < FILAS && nuevaColumna >= 0 && nuevaColumna < COLUMNAS) {
+                        if ( tablero[nuevaFila][nuevaColumna] == MINA ) {
+                            return MINA_ENCONTRADA;
+                        }
+                        if ( tablero[nuevaFila][nuevaColumna] == CASILLA_INEXPLORADA ) {
+                            tablero[nuevaFila][nuevaColumna] = CASILLA_EXPLORADA;
+                        }
+                    }
+                }
+            }
+        }
+
+        return JUGADA_BUSCAR_EFECTUADA_CORRECTAMENTE;
+    }
+
+    return JUGADA_BUSCAR_NO_SE_PUEDE_APLICAR;
+}
+
 
 int casillaEscogidaStatus(int fila, int columna, char tablero[FILAS][COLUMNAS], char movimiento) {
     fila--;
@@ -516,6 +573,10 @@ int casillaEscogidaStatus(int fila, int columna, char tablero[FILAS][COLUMNAS], 
         } else {
             return CASILLEROS_MARCADOS_LLEGO_AL_LIMITE;
         }
+    }
 
+
+    if ( movimiento == 'B' ) {
+        return buscarExplorarCasillerosAdyacentes(fila, columna, tablero);
     }
 }
