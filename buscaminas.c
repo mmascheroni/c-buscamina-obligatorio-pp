@@ -134,6 +134,7 @@ int solicitar_opcion_de_gestion_de_usuarios();
 // Solicita la opcion deseada dentro del menu gestion de consultas
 int solicitar_opcion_de_consultas();
 
+// Solicita la opcion deseada en el menu de alta de usuarios
 int solicitar_opcion_de_alta_o_reactivar();
 
 
@@ -201,27 +202,72 @@ void imprimirJugador(jugador j);
 // Recorre jugadores imprimiendo cada jugador
 void imprimirJugadores(jugadores js);
 
+// Imprime solamente los jugadores que se encuentran activos
 void imprimirJugadoresActivos(jugadores js);
 
+// Imprime una partida
 void imprimirPartida(partida p);
 
+// Imprime todas las partidas
 void imprimirPartidas(partidas ps);
 
+// Devuelce por jugador buscado por su alias, las partidas ganadas que tiene
 int cantidadPartidasGanadasPorJugador(partidas ps, char aliasIngresado[]);
 
+// Imprime los jugadores sumando el dato de partidas ganadas
 void imprimirJugadoresPartidasGanadas(jugador j, int cantidadGanadas);
 
+// imprime Jugadores Activos y sus partidas
 void imprimirJugadoresActivosYPartidas(partidas ps, jugadores js);
 
+// Ordena un arreglo de jugadores por el alias
 void ordenarArregloPorAlias(jugador arr[], int n);
 
+// Copia una cadena de array a otra
 void copiarCadena(char destino[], char origen[]);
 
+// Busca y devuelve una struct del tipo jugador coincidente con el alias
 jugador jugadorPorAlias(jugadores *js, char aliasBuscado[]);
 
+// Modifica el valor de activo a 0
 void darDeBajaAJugador(jugadores *js, char alias[]);
 
+// Modifica el valor de activo a 1
 void darDeAltaAJugador(jugadores *js, char alias[]);
+
+// Funcion para modificar un jugador aqui se manejan todas las operaciones
+void modificarJugador(jugadores *js, partidas *ps, char alias[]);
+
+// Solicita una opcion para que dato
+int solicitar_opcion_de_modificacion_de_dato();
+
+// Solicita una opcion en el menu de modificacion de dato activo
+int solicitar_opcion_de_modificacion_de_dato_activo();
+
+// Solicita confirmacion para agregar nuevo jugador
+int solicitar_confirmacion_de_agregar_jugador();
+
+// Solicita confirmacion para guardar un dato
+int solicitar_confirmacion_de_modificacion();
+
+// Modifica el nombre de un jugador, en la misma se llama a la funcion solicitar_confirmacion_de_modificacion() para confirmar si guardar o no el cambio aplicado
+void modificar_nombre(char destino[]);
+
+// Modifica el apellido de un jugador, en la misma se llama a la funcion solicitar_confirmacion_de_modificacion() para confirmar si guardar o no el cambio aplicado
+void modificar_apellido(char destino[]);
+
+// Modifica la cedula de un jugador, en la misma se llama a la funcion solicitar_confirmacion_de_modificacion() para confirmar si guardar o no el cambio aplicado
+void modificar_cedula(char destino[]);
+
+// Modifica el alias de un jugador, en la misma se llama a la funcion solicitar_confirmacion_de_modificacion() para confirmar si guardar o no el cambio aplicado
+void modificar_alias(partidas *ps, char destino[]);
+
+
+// Actualiza los alias en las partidas del alias de un jugador modificado
+void actualizarAliasModificadosEnPartidas(partidas *ps, char aliasViejo[], char aliasNuevo[]);
+
+// Imprime partidas por jugador
+void imprimirPartidasPorJugador(partidas ps, char alias[]);
 
 /***************************************
 *                                      *
@@ -280,6 +326,11 @@ int main() {
 
             if ( opcionGestionUsuarios == 3 ) {
                 printf("\n\nHa ingresado a Modificacion de jugador");
+                char aliasAModificar[15];
+                printf("\n\nIngrese el alias del jugador a modificar datos: ");
+                scanf(" %s", aliasAModificar);
+
+                modificarJugador(&js, &ps, aliasAModificar);
             }
 
             if ( opcionGestionUsuarios == 4 ) {
@@ -304,6 +355,11 @@ int main() {
 
             if ( opcionConsultas == 3 ) {
                 printf("\n\nHa ingresado a Listado de partidas por jugador");
+                char alias[15];
+
+                solicitar_y_guardar_alias(alias);
+
+                imprimirPartidasPorJugador(ps, alias);
             }
 
             if ( opcionConsultas == 4 ) {
@@ -330,14 +386,22 @@ int main() {
                 resultado = ejecutarJuegoLoop();
                 insertarPartidaEnPartidas(&ps, j, resultado);
             } else {
-                printf("\n\nEl jugador no se encuentra dado de alta! Por favor ingresa los datos para dar de alta al jugador: \n");
+                printf("\n\nEl jugador no se encuentra dado de alta! \n");
 
-                j = insertarJugadorEnJugadores(&js);
-                char aliasAlta[15];
-                copiarCadena(js.jugadores[js.tope].alias, aliasAlta);
-                resultado = ejecutarJuegoLoop();
+                int confirmacion = solicitar_confirmacion_de_agregar_jugador();
 
-                insertarPartidaEnPartidas(&ps, j, resultado);
+                if (confirmacion == 1) {
+                    j = insertarJugadorEnJugadores(&js);
+                    char aliasAlta[15];
+                    copiarCadena(js.jugadores[js.tope].alias, aliasAlta);
+                    resultado = ejecutarJuegoLoop();
+                    insertarPartidaEnPartidas(&ps, j, resultado);
+                } else {
+                    printf("\nHa salido de la opcion jugar");
+                }
+
+
+                
             }
         }
 
@@ -428,6 +492,21 @@ void imprimirPartidas(partidas ps) {
         imprimirPartida(ps.partidas[i]);
     }
 }
+
+
+void imprimirPartidasPorJugador(partidas ps, char alias[]) {
+    int iguales = 0;
+    for (int i = 0; i < ps.tope; i++) {
+        iguales = compararArreglos(ps.partidas[i].alias, alias);
+
+        if ( iguales == 1 ) {
+            printf("\nPartida %d:\n", i + 1);
+            imprimirPartida(ps.partidas[i]);
+        }
+    }
+}
+
+
 
 int cantidadPartidasGanadasPorJugador(partidas ps, char aliasIngresado[]) {
     int iguales = 0;
@@ -651,7 +730,78 @@ void darDeAltaAJugador(jugadores *js, char alias[]) {
     }
 }
 
+void modificarJugador(jugadores *js, partidas *ps, char alias[]) {
+    int iguales = 0, opcion = 0;
+    fecha f;
+    
+    for( int i = 0; i < js->tope; i++ ) {
+        iguales = compararArreglos(js->jugadores[i].alias, alias);
 
+        if ( iguales == 1 ) {
+            printf("\nSe ha encontrado el jugador %s a editar correctamente", js->jugadores[i].alias);
+
+            do {
+                opcion = solicitar_opcion_de_modificacion_de_dato();
+
+                if (opcion == 1) {
+                    modificar_cedula(js->jugadores[i].cedula);
+                }
+
+                if (opcion == 2) {
+                    modificar_nombre(js->jugadores[i].nombre);
+                }
+
+                if (opcion == 3) {
+                    modificar_apellido(js->jugadores[i].apellido);
+                    
+                }
+
+                if (opcion == 4) {
+                    modificar_alias(ps, js->jugadores[i].alias);
+                }
+
+                if (opcion == 5) {
+                    printf("\nIngrese la nueva fecha de nacimiento: ");
+                    f = solicitar_fecha();
+                    js->jugadores[i].nacimiento = f;
+                    printf("\nSe ha modificado al jugador %s correctamente", js->jugadores[i].alias);
+                }
+
+                if (opcion == 6) {
+                    int opcionActivo = solicitar_opcion_de_modificacion_de_dato_activo();
+
+                    if (opcionActivo == 1) {
+                        js->jugadores[i].activo = 1;
+                        printf("\nSe ha modificado al jugador %s correctamente", js->jugadores[i].alias);
+                    }
+
+                    if ( opcionActivo == 2 ) {
+                        js->jugadores[i].activo = 0;
+                        printf("\nSe ha modificado al jugador %s correctamente", js->jugadores[i].alias);
+                    }
+
+                    if ( opcionActivo == 3 ) {
+                        printf("\nHa salido de la modificacion de activo");
+                    }
+                    
+
+                }
+
+
+                if ( opcion == 7 ) {
+                    printf("\nHa salido del menu modificacion de jugador");
+                }
+
+                
+            } while ( opcion != 7 );
+
+        }
+    }
+
+    if ( iguales == 0 ) {
+        printf("\nNo es posible modificar datos del jugador %s , ya que no se encuentra en la lista dejugadores", alias);
+    }
+}
 
 
 /****************************************
@@ -789,7 +939,79 @@ int solicitar_opcion_de_alta_o_reactivar() {
     return opcion;
 }
 
-                
+
+int solicitar_opcion_de_modificacion_de_dato() {
+    int opcion = 0;
+
+    do {
+        printf(
+            "\n\nPor favor, escoga la opcion del dato que desea modificar, en caso de que no desee modificar ningun dato, ingrese la opcion de salir (7):"
+            "\n 1 - Modificar cedula"
+            "\n 2 - Modificar nombre"
+            "\n 3 - Modificar apellido"
+            "\n 4 - Modificar alias"
+            "\n 5 - Modificar fecha de nacimiento"
+            "\n 6 - Modificar si se encuentra activo"
+            "\n 7 - Salir"
+            "\n\n Ingrese su opcion: "
+        );
+        scanf(" %d", &opcion);
+    } while ( opcion < 1 || opcion > 7);
+
+    return opcion;
+}
+
+
+int solicitar_opcion_de_modificacion_de_dato_activo() {
+    int opcion = 0;
+
+    do {
+        printf(
+                        "\nIngrese la opcion deseada: "
+                        "\n1 - Jugador activo: "
+                        "\n2 - Jugador inactivo: "
+                        "\n3 - Salir"
+                        "\n\n Ingrese su opcion: "
+                        );
+        scanf(" %d", &opcion);
+    } while ( opcion < 1 || opcion > 3 );
+
+    return opcion;
+}
+
+int solicitar_confirmacion_de_agregar_jugador() {
+    int opcion = 0;
+
+    do {
+        printf(
+        "\ndesea agregar un nuevo jugador: "
+        "\n1 - Si "
+        "\n2 - No "
+        "\nIngrese su opcion: "
+        );
+
+        scanf(" %d", &opcion);
+    } while ( opcion < 1 || opcion > 2);
+
+    return opcion;
+}
+
+int solicitar_confirmacion_de_modificacion() {
+    int opcion = 0;
+
+    do {
+        printf(
+        "\nDesea guardar la modificacion realizada?: "
+        "\n1 - Si "
+        "\n2 - No "
+        "\nIngrese su opcion: "
+        );
+        scanf(" %d", &opcion);
+    } while ( opcion < 1 || opcion > 2);
+
+    return opcion;
+}
+
 
 
 /***************************************
@@ -828,6 +1050,84 @@ void solicitar_y_guardar_nombre(char nombre[]) {
     scanf(" %s", nombre);
 }
 
+void modificar_cedula(char destino[]) {
+    char temp[15];
+    
+    printf("\nIngrese la nueva cedula por favor: ");
+    solicitar_cedula(temp);
+
+    int opcion = solicitar_confirmacion_de_modificacion();
+
+    if ( opcion == 1 ) {
+        copiarCadena(destino, temp);
+        printf("\nSe modifico la cedula del jugador correctamente");
+    } else {
+        printf("\nHa cancelado la modificacion de la cedula");
+    }
+}
+
+void modificar_nombre(char destino[]) {
+    char temp[15];
+    int opcion = 0;
+    printf("\nIngrese el nuevo nombre (Max. de 10 caracteres): ");
+    scanf(" %s", temp);
+
+    opcion = solicitar_confirmacion_de_modificacion();
+
+    if ( opcion == 1 ) {
+        copiarCadena(destino, temp);
+        printf("\nSe modifico el nombre del jugador correctamente");
+    } else {
+        printf("\nHa cancelado la modificacion del nombre");
+    }
+}
+
+void modificar_apellido(char destino[]) {
+    char temp[15];
+    int opcion = 0;
+    printf("\nIngrese el nuevo apellido (Max. de 10 caracteres): ");
+    scanf(" %s", temp);
+
+    opcion = solicitar_confirmacion_de_modificacion();
+
+    if ( opcion == 1 ) {
+        copiarCadena(destino, temp);
+        printf("\nSe modifico el apellido del jugador correctamente");
+    } else {
+        printf("\nHa cancelado la modificacion del apellido");
+    }
+}
+
+void modificar_alias(partidas *ps, char destino[]) {
+    char temp[15];
+    int opcion = 0;
+    printf("\nIngrese el nuevo alias (Max. de 10 caracteres): ");
+    scanf(" %s", temp);
+
+    opcion = solicitar_confirmacion_de_modificacion();
+
+    if ( opcion == 1 ) {
+        actualizarAliasModificadosEnPartidas(ps, destino, temp);
+        copiarCadena(destino, temp);
+        printf("\nSe modifico el alias del jugador correctamente");
+    } else {
+        printf("\nHa cancelado la modificacion del alias");
+    }
+}
+
+void actualizarAliasModificadosEnPartidas(partidas *ps, char aliasViejo[], char aliasNuevo[]) {
+    int iguales = 0;
+
+    for ( int i = 0; i < ps->tope; i++ ) {
+        iguales = compararArreglos(ps->partidas[i].alias, aliasViejo);
+
+        if ( iguales == 1 ) {
+            copiarCadena(ps->partidas[i].alias, aliasNuevo);
+        }
+    }
+
+}
+
 void solicitar_y_guardar_apellido(char apellido[]) {
     printf("\nIngrese su apellido (Max. de 10 caracteres): ");
     scanf(" %s", apellido);
@@ -837,6 +1137,7 @@ void solicitar_y_guardar_alias(char alias[]) {
     printf("\nIngrese su alias (Max. de 10 caracteres): ");
     scanf(" %s", alias);
 }
+
 
 
 int verificar_fecha(int primero, int segundo, int tercero) {
