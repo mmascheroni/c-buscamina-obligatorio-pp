@@ -89,7 +89,7 @@ las minas mencionadas.
 
     -   Tras cada jugada (válida o inválida) se debe volver a mostrar el tablero con sus respectivas modificaciones, en caso que corresponda.
 
-    ![alt text](image-1.png)
+    ![alt text](image.png)
 
 ### Se pide
 
