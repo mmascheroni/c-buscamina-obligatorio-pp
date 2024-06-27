@@ -178,7 +178,7 @@ typedef struct {
 // Funciones para trabajar con las estructuras
 
 // Crea un jugador del tipo de struct jugador
-jugador agregar_jugador();
+jugador agregar_jugador(jugadores *js);
 
 partida agregar_partida(jugador j, int res);
 
@@ -260,7 +260,7 @@ void modificar_apellido(char destino[]);
 void modificar_cedula(char destino[]);
 
 // Modifica el alias de un jugador, en la misma se llama a la funcion solicitar_confirmacion_de_modificacion() para confirmar si guardar o no el cambio aplicado
-void modificar_alias(partidas *ps, char destino[]);
+void modificar_alias(partidas *ps, jugadores *js, char destino[]);
 
 
 // Actualiza los alias en las partidas del alias de un jugador modificado
@@ -268,6 +268,8 @@ void actualizarAliasModificadosEnPartidas(partidas *ps, char aliasViejo[], char 
 
 // Imprime partidas por jugador
 void imprimirPartidasPorJugador(partidas ps, char alias[]);
+
+void solicitar_alias_y_verificar(jugadores *js, char destino[]);
 
 /***************************************
 *                                      *
@@ -556,13 +558,14 @@ void imprimirJugadoresActivosYPartidas(partidas ps, jugadores js) {
     }
 }
 
-jugador agregar_jugador() {
+jugador agregar_jugador(jugadores *js) {
     jugador j;
 
+    solicitar_alias_y_verificar(js, j.alias);
     solicitar_cedula(j.cedula);
     solicitar_y_guardar_nombre(j.nombre);
     solicitar_y_guardar_apellido(j.apellido);
-    solicitar_y_guardar_alias(j.alias);
+    // solicitar_y_guardar_alias(j.alias);
 
     printf("\nIngresar fecha de nacimiento: ");
     fecha f = solicitar_fecha();
@@ -572,9 +575,27 @@ jugador agregar_jugador() {
     return j;
 }
 
+void solicitar_alias_y_verificar(jugadores *js, char destino[]) {
+    char temp[15];
+    int existe = 0;
+    do {
+        printf("\nIngrese el alias del jugador ha agregar: ");
+        scanf(" %s", temp);
+
+        existe = aliasPerteneceAJugadores(js->jugadores, js->tope , temp);
+
+        printf("\nEl alias %s ya se encuentra registrado, por favor pruebe otro alias", temp);
+    } while ( existe != 0 );
+    
+    if ( existe == 0 ) {
+        copiarCadena(destino, temp);
+    }
+
+} 
+
 jugador insertarJugadorEnJugadores(jugadores *js) {
     if ( js->tope < ( 5 ) ) {
-        jugador j = agregar_jugador();
+        jugador j = agregar_jugador(js);
 
         js->jugadores[js->tope] = j;
         
@@ -757,7 +778,7 @@ void modificarJugador(jugadores *js, partidas *ps, char alias[]) {
                 }
 
                 if (opcion == 4) {
-                    modificar_alias(ps, js->jugadores[i].alias);
+                    modificar_alias(ps, js, js->jugadores[i].alias);
                 }
 
                 if (opcion == 5) {
@@ -1098,17 +1119,17 @@ void modificar_apellido(char destino[]) {
     }
 }
 
-void modificar_alias(partidas *ps, char destino[]) {
-    char temp[15];
+void modificar_alias(partidas *ps, jugadores *js, char destino[]) {
     int opcion = 0;
-    printf("\nIngrese el nuevo alias (Max. de 10 caracteres): ");
-    scanf(" %s", temp);
+    char temp[15];
+    copiarCadena(temp, destino);
+
+    solicitar_alias_y_verificar(js->jugadores, destino);
 
     opcion = solicitar_confirmacion_de_modificacion();
 
     if ( opcion == 1 ) {
-        actualizarAliasModificadosEnPartidas(ps, destino, temp);
-        copiarCadena(destino, temp);
+        actualizarAliasModificadosEnPartidas(ps, temp, js->jugadores[js->tope - 1].alias);
         printf("\nSe modifico el alias del jugador correctamente");
     } else {
         printf("\nHa cancelado la modificacion del alias");
